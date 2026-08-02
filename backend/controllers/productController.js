@@ -2,6 +2,7 @@ const supabase = require('../config/database');
 
 // ============================================================
 // GET /api/products/bestsellers
+// (homepage teaser only — pulled from 'products' table)
 // ============================================================
 exports.getBestsellers = async (req, res) => {
   try {
@@ -22,6 +23,7 @@ exports.getBestsellers = async (req, res) => {
 
 // ============================================================
 // GET /api/products/new-arrivals
+// (homepage teaser only — pulled from 'products' table)
 // ============================================================
 exports.getNewArrivals = async (req, res) => {
   try {
@@ -42,18 +44,20 @@ exports.getNewArrivals = async (req, res) => {
 
 // ============================================================
 // GET /api/products/category/:category
+// FIX: reverted to querying ONLY 'category_products' — this is the
+// single source of truth for category browse pages (Sarees, Suits,
+// Maxi, Jewelry). The 'products' table is exclusively for the
+// Bestsellers / New Arrivals homepage teasers and must never feed
+// the category listing pages, per the intended design: New Arrivals
+// on the homepage is a pure navigation teaser — it only routes to the
+// category page on click, it does not duplicate its own data there.
 // ============================================================
 exports.getByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    // FIX: unified schema — the 'products' table (not the old
-    // 'category_products' table) is where the admin panel now inserts
-    // all products, with a 'category' column. Using ilike for
-    // case-insensitive matching since frontend sends lowercase
-    // ("saree") while the DB stores "Saree".
     const { data, error } = await supabase
-      .from('products')
+      .from('category_products')
       .select('*')
       .ilike('category', category)
       .order('created_at', { ascending: false });
@@ -68,22 +72,24 @@ exports.getByCategory = async (req, res) => {
 
 // ============================================================
 // GET /api/products/:id
+// Product detail pages reached FROM a category listing should
+// resolve from 'category_products' — kept a fallback to 'products'
+// only in case a bestseller/new-arrival card's own detail view is
+// ever opened directly.
 // ============================================================
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // FIX: primary table is now 'products'; kept 'category_products' as a
-    // fallback for any legacy rows that still live there.
     let { data, error } = await supabase
-      .from('products')
+      .from('category_products')
       .select('*')
       .eq('id', id)
       .single();
 
     if (error || !data) {
       const fallback = await supabase
-        .from('category_products')
+        .from('products')
         .select('*')
         .eq('id', id)
         .single();
