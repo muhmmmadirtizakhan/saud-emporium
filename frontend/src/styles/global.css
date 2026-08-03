@@ -6920,3 +6920,78 @@ body {
     display: none;
   }
 }
+
+/* ========================= */
+/* Product Detail — Mobile Fix (append only) */
+/* ========================= */
+@media (max-width: 600px) {
+  .product-container {
+    gap: 25px;
+  }
+
+  .product-main-image {
+    min-height: 320px;
+    height: 380px;
+  }
+
+  .product-thumbnails {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .product-thumb {
+    height: 80px;
+  }
+
+  .product-info {
+    gap: 16px;
+  }
+
+  .product-title,
+  .product-info .product-title {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+
+  .product-price {
+    font-size: 1.5rem;
+  }
+
+  .product-highlights li {
+    font-size: 13px;
+  }
+
+  .product-option-group h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .product-quantity {
+    gap: 10px;
+  }
+
+  .qty-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .product-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .add-cart-btn,
+  .buy-now-btn {
+    height: 52px;
+    width: 100%;
+  }
+
+  .product-delivery {
+    padding: 14px;
+  }
+
+  .product-features {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
