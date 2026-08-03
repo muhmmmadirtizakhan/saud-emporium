@@ -20,6 +20,7 @@ import ScrollToTop from './components/common/ScrollToTop/ScrollToTop';
 function App() {
   return (
     <Layout>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/sarees" element={<Sarees />} />
@@ -33,11 +34,9 @@ function App() {
         <Route path="/payment-instructions" element={<PaymentInstructions />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/new-arrivals" element={<NewArrivalsPage />} />
-        
       </Routes>
-         <WhatsAppButton /> 
+      <WhatsAppButton /> 
     </Layout>
   );
 }
-
 export default App;
