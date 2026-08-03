@@ -6995,3 +6995,31 @@ body {
     gap: 10px;
   }
 }
+@media (max-width: 600px) {
+  .product-thumbnails {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    overflow-x: visible !important;
+    overflow: visible !important;
+    gap: 8px !important;
+  }
+
+  .product-thumb {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 72px !important;
+  }
+
+  .product-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .add-cart-btn,
+  .buy-now-btn {
+    width: 100% !important;
+    border-radius: 12px !important;
+    height: 54px !important;
+  }
+}
