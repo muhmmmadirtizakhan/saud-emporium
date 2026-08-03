@@ -2279,8 +2279,8 @@ body {
   width: calc(100% + 30px);
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.85) 40%,
-    rgba(0, 0, 0, 0.4) 75%,
+  rgba(0, 0, 0, 0.65) 30%,
+    rgba(0, 0, 0, 0.25) 70%,
     rgba(0, 0, 0, 0) 100%
   );
   border-radius: 0 0 15px 15px;
