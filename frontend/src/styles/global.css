@@ -7023,3 +7023,18 @@ body {
     height: 54px !important;
   }
 }
+@media (max-width: 600px) {
+  .footer-newsletter input {
+    height: 50px;
+    font-size: 14px;
+  }
+
+  .footer-newsletter button {
+    height: 50px;
+    font-size: 14px;
+  }
+
+  .footer-socials {
+    justify-content: center;
+  }
+}
