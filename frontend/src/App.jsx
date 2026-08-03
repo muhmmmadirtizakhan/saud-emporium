@@ -16,7 +16,7 @@ import PaymentInstructions from './components/pages/PaymentInstructions/PaymentI
 import ProductDetail from './components/pages/ProductDetail/ProductDetail';
 import NewArrivalsPage from './components/pages/NewArrivalsPage/NewArrivalsPage';
 import WhatsAppButton from './components/common/WhatsAppButton/WhatsAppButton';
-
+import ScrollToTop from './components/common/ScrollToTop/ScrollToTop';
 function App() {
   return (
     <Layout>
