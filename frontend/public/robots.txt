@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://saud-and-emporium-frontrend.vercel.app/sitemap.xml
