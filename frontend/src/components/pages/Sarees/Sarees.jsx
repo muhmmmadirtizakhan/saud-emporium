@@ -1,8 +1,9 @@
 // src/components/pages/Sarees/Sarees.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 const Sarees = () => {
@@ -14,6 +15,13 @@ const Sarees = () => {
 
   useEffect(() => {
     fetchProducts();
+    // Poll for new products while user is on this page so newly added
+    // admin products appear without a hard page refresh.
+    const interval = setInterval(() => {
+      fetchProducts();
+    }, 3000); // every 3s
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchProducts = async () => {
@@ -43,6 +51,26 @@ const Sarees = () => {
 
   const filters = ['Net', 'Chiffon', 'Silk', 'Sheesha Silk'];
 
+  const parseImages = (images) => {
+    if (Array.isArray(images)) return images;
+    if (!images) return [];
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        return [images];
+      }
+    }
+    return [];
+  };
+
+  const getProductImage = (product) => {
+    if (product.image) return product.image;
+    const images = parseImages(product.images);
+    return images[0] || '';
+  };
+
   const filteredProducts = selectedFilter
     ? products.filter(p => p.sub_category?.toLowerCase() === selectedFilter.toLowerCase())
     : products;
@@ -50,6 +78,10 @@ const Sarees = () => {
   if (loading) {
     return (
       <div className="page">
+        <Helmet>
+          <title>Ladies Sarees Online | Saud Emporium</title>
+          <meta name="description" content="Discover exquisite sarees crafted with premium fabrics, intricate detailing, and timeless elegance. Shop the latest saree collection at Saud Emporium." />
+        </Helmet>
         <section className="category-hero">
           <div className="category-hero-banner">
             <img 
@@ -75,6 +107,10 @@ const Sarees = () => {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Ladies Sarees Online | Saud Emporium</title>
+        <meta name="description" content="Discover exquisite sarees crafted with premium fabrics, intricate detailing, and timeless elegance. Shop the latest saree collection at Saud Emporium." />
+      </Helmet>
       {/* ========================= */}
       {/* CATEGORY HERO */}
       {/* ========================= */}
@@ -143,7 +179,7 @@ const Sarees = () => {
                 >
                   <div className="image-container">
                     <img 
-                      src={product.image || product.images?.[0] || ''} 
+                      src={getProductImage(product)} 
                       alt={product.name} 
                       className="product-image" 
                     />
@@ -157,7 +193,7 @@ const Sarees = () => {
                   <div className="product-details">
                     <h3 className="product-title">{product.name}</h3>
                     <div className="price-container">
-                      <span className="discounted-price">{money(product.price)}</span>
+                      <span className="discounted-price">{money(getProductDisplayPrice(product))}</span>
                     </div>
                   </div>
                 </div>

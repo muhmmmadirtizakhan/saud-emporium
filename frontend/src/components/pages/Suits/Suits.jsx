@@ -1,8 +1,9 @@
 // src/components/pages/Suits/Suits.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 const Suits = () => {
@@ -49,6 +50,10 @@ const Suits = () => {
   if (loading) {
     return (
       <div className="page">
+        <Helmet>
+          <title>Women's Suits Collection | Saud Emporium</title>
+          <meta name="description" content="Explore beautifully crafted 2-piece and 3-piece women's suits with premium fabrics and elegant embroidery at Saud Emporium." />
+        </Helmet>
         <section className="category-hero">
           <div className="category-hero-banner">
             <img src="https://www.nishatlinenuae.com/cdn/shop/articles/Unstitched_printed_suits_for_ladies_in_UAE.jpg?v=1719402045&width=1200" alt="Suits" />
@@ -71,6 +76,10 @@ const Suits = () => {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Women's Suits Collection | Saud Emporium</title>
+        <meta name="description" content="Explore beautifully crafted 2-piece and 3-piece women's suits with premium fabrics and elegant embroidery at Saud Emporium." />
+      </Helmet>
       <section className="category-hero">
         <div className="category-hero-banner">
           <img src="https://www.nishatlinenuae.com/cdn/shop/articles/Unstitched_printed_suits_for_ladies_in_UAE.jpg?v=1719402045&width=1200" alt="Suits" />
@@ -135,7 +144,7 @@ const Suits = () => {
                   <div className="product-details">
                     <h3 className="product-title">{product.name}</h3>
                     <div className="price-container">
-                      <span className="discounted-price">{money(product.price)}</span>
+                      <span className="discounted-price">{money(getProductDisplayPrice(product))}</span>
                     </div>
                   </div>
                 </div>

@@ -7,6 +7,28 @@ export const money = (amount) => {
   return 'Rs ' + Number(amount || 0).toLocaleString('en-PK');
 };
 
+export const getProductVariantType = (product) => {
+  const variant = String(product?.variant || 'unstitched').toLowerCase();
+  if (variant === 'stitched' || variant === 'unstitched' || variant === 'both') {
+    return variant;
+  }
+  return 'unstitched';
+};
+
+export const getProductDisplayPrice = (product) => {
+  const variantType = getProductVariantType(product);
+  if (variantType === 'unstitched') {
+    return Number(product?.unstitched_price ?? product?.price ?? 0);
+  }
+  return Number(product?.price ?? 0);
+};
+
+export const getVariantDisplayName = (variant) => {
+  if (variant === 'stitched') return 'Stitched';
+  if (variant === 'unstitched') return 'Unstitched';
+  return '';
+};
+
 // Escape HTML attributes
 export const escapeAttr = (str) => {
   return String(str || '').replace(/"/g, '&quot;');

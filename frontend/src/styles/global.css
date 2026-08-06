@@ -3453,27 +3453,42 @@ body {
 @media (max-width: 768px) {
   .footer-section {
     padding: 60px 5% 30px;
+    overflow-x: hidden;
   }
 
   .footer-top {
     grid-template-columns: 1fr;
-
     gap: 40px;
+  }
+
+  .footer-top > * {
+    min-width: 0;
   }
 
   .footer-bottom {
     flex-direction: column;
-
     align-items: flex-start;
+  }
+
+  .footer-newsletter {
+    min-width: 0;
+  }
+
+  .footer-newsletter p {
+    max-width: 100%;
   }
 
   .footer-newsletter form {
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
   }
 
   .footer-newsletter input,
   .footer-newsletter button {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 
@@ -5340,7 +5355,7 @@ body {
 @media (max-width: 768px) {
   .product-main-image {
     height: auto;
-    min-height: 400px;
+    min-height: 320px;
   }
 
   .product-thumbnails {
@@ -5348,6 +5363,7 @@ body {
     overflow-x: auto;
     gap: 12px;
     scrollbar-width: none;
+    min-width: 0;
   }
 
   .product-thumbnails::-webkit-scrollbar {
@@ -5370,6 +5386,21 @@ body {
   .product-features {
     grid-template-columns: 1fr;
   }
+
+  .product-container,
+  .product-gallery,
+  .product-info,
+  .product-option-group,
+  .product-sizes,
+  .product-delivery-details,
+  .product-notice {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .product-option-group {
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 576px) {
@@ -5381,6 +5412,21 @@ body {
   }
   .product-size {
     min-width: 55px;
+  }
+  .product-section {
+    padding: 20px 5%;
+  }
+  .product-container {
+    gap: 30px;
+  }
+  .product-thumbnails {
+    gap: 10px;
+  }
+  .product-delivery-details {
+    padding: 16px;
+  }
+  .product-notice {
+    padding: 14px;
   }
 }
 .product-highlights {
@@ -6919,7 +6965,6 @@ body {
     display: none;
   }
 }
-
 /* ========================= */
 /* Product Detail — Mobile Fix (append only) */
 /* ========================= */
@@ -6993,8 +7038,7 @@ body {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-}
-@media (max-width: 600px) {
+
   .product-thumbnails {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;

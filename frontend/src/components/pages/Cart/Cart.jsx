@@ -144,7 +144,11 @@ const loadOrders = async () => {
                           ✕
                         </button>
                         <div className="cart-item-content">
-                          <h3>{item.product_name}{item.size ? ' — ' + item.size : ''}</h3>
+                          <h3>
+                            {item.product_name}
+                            {(item.variant || item.selected_variant) ? ` — ${item.variant || item.selected_variant}` : ''}
+                            {item.size ? ` — ${item.size}` : ''}
+                          </h3>
                           <span className="cart-item-unit">{money(item.product_price)} each</span>
                           <div className="cart-item-qty">
                             <button onClick={() => handleQuantityChange(item.id, -1)}>−</button>

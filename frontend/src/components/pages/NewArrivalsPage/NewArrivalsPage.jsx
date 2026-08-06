@@ -1,8 +1,9 @@
 // src/components/pages/NewArrivalsPage/NewArrivalsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 // Fisher-Yates shuffle — matches original vanilla JS loadNewArrivalPage()
@@ -62,6 +63,10 @@ const NewArrivalsPage = () => {
   if (loading) {
     return (
       <div className="page">
+        <Helmet>
+          <title>New Arrivals | Saud Emporium</title>
+          <meta name="description" content="Discover the latest fashion arrivals at Saud Emporium — fresh styles across sarees, suits, maxi dresses, and jewelry." />
+        </Helmet>
         <section className="category-hero">
           <div className="category-hero-banner">
             <img
@@ -89,6 +94,10 @@ const NewArrivalsPage = () => {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>New Arrivals | Saud Emporium</title>
+        <meta name="description" content="Discover the latest fashion arrivals at Saud Emporium — fresh styles across sarees, suits, maxi dresses, and jewelry." />
+      </Helmet>
       <section className="category-hero">
         <div className="category-hero-banner">
           <img
@@ -141,7 +150,7 @@ const NewArrivalsPage = () => {
                 <div className="product-details">
                   <h3 className="product-title">{product.name}</h3>
                   <div className="price-container">
-                    <span className="discounted-price">{money(product.price)}</span>
+                    <span className="discounted-price">{money(getProductDisplayPrice(product))}</span>
                   </div>
                 </div>
               </div>

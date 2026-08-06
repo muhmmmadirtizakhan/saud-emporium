@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 // Maps a product's category string to its category page route.
@@ -107,7 +107,7 @@ const NewArrivals = () => {
                 <small>{product.category || ''}</small>
                 <h3>{product.name || product.heading}</h3>
                 <div className="best-bottom">
-                  <h4>{money(product.price)}</h4>
+                  <h4>{money(getProductDisplayPrice(product))}</h4>
                   <button className="view-btn">View</button>
                 </div>
               </div>

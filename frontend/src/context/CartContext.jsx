@@ -1,7 +1,8 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import api from '../api';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import { getVariantDisplayName } from '../utils/helpers';
 
 const CartContext = createContext();
 
@@ -9,6 +10,7 @@ export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const updatingRef = useRef(new Set());
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -30,16 +32,19 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (product, quantity = 1, size = '', color = '') => {
+  const addToCart = async (product, quantity = 1, size = '', color = '', variant = '') => {
     try {
+      const variantLabel = getVariantDisplayName(variant);
+      const displayName = [product.heading || product.name, variantLabel].filter(Boolean).join(' — ');
       const response = await api.post('/cart', {
         product_id: product.id,
-        product_name: product.heading || product.name,
-        product_price: product.price,
+        product_name: displayName,
+        product_price: product.price ?? 0,
         product_image: product.front_image || product.image || '',
         quantity,
         size,
         color,
+        variant: variantLabel || variant,
       });
       await fetchCart();
       toast.success('Added to cart!');
@@ -51,11 +56,23 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (cartId, quantity) => {
+    // Prevent concurrent update requests for the same cart item
+    if (updatingRef.current.has(cartId)) return;
+    updatingRef.current.add(cartId);
+
+    // Optimistic UI update
+    setItems(prev => prev.map(item => item.id === cartId ? { ...item, quantity } : item));
+
     try {
       await api.put(`/cart/${cartId}`, { quantity });
+      // Refresh to ensure server-side consistency
       await fetchCart();
     } catch (error) {
       toast.error('Failed to update quantity');
+      // Re-fetch to restore consistent state
+      await fetchCart();
+    } finally {
+      updatingRef.current.delete(cartId);
     }
   };
 

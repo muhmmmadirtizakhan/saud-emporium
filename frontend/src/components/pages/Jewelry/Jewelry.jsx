@@ -1,8 +1,9 @@
 // src/components/pages/Jewelry/Jewelry.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 const Jewelry = () => {
@@ -49,6 +50,10 @@ const Jewelry = () => {
   if (loading) {
     return (
       <div className="page">
+        <Helmet>
+          <title>Ladies Jewelry Collection | Saud Emporium</title>
+          <meta name="description" content="Elevate your style with handcrafted jewelry blending timeless beauty with contemporary design at Saud Emporium." />
+        </Helmet>
         <section className="category-hero">
           <div className="category-hero-banner">
             <img src="https://hips.hearstapps.com/hmg-prod/images/fc96bb75-dd84-4373-971e-4124fd911998.jpg?crop=1xw:0.4xh;0xw,0.296xh&resize=1200:*" alt="Jewelry" />
@@ -71,6 +76,10 @@ const Jewelry = () => {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Ladies Jewelry Collection | Saud Emporium</title>
+        <meta name="description" content="Elevate your style with handcrafted jewelry blending timeless beauty with contemporary design at Saud Emporium." />
+      </Helmet>
       <section className="category-hero">
         <div className="category-hero-banner">
           <img src="https://hips.hearstapps.com/hmg-prod/images/fc96bb75-dd84-4373-971e-4124fd911998.jpg?crop=1xw:0.4xh;0xw,0.296xh&resize=1200:*" alt="Jewelry" />
@@ -135,7 +144,7 @@ const Jewelry = () => {
                   <div className="product-details">
                     <h3 className="product-title">{product.name}</h3>
                     <div className="price-container">
-                      <span className="discounted-price">{money(product.price)}</span>
+                      <span className="discounted-price">{money(getProductDisplayPrice(product))}</span>
                     </div>
                   </div>
                 </div>

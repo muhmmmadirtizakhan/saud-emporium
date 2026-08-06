@@ -1,8 +1,9 @@
 // src/components/pages/Maxi/Maxi.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../../../api';
-import { money } from '../../../utils/helpers';
+import { money, getProductDisplayPrice } from '../../../utils/helpers';
 import { useWishlist } from '../../../context/WishlistContext';
 
 const Maxi = () => {
@@ -43,6 +44,10 @@ const Maxi = () => {
   if (loading) {
     return (
       <div className="page">
+        <Helmet>
+          <title>Maxi Dresses & Long Frocks | Saud Emporium</title>
+          <meta name="description" content="Shop graceful maxi dresses and long frocks featuring luxurious fabrics and sophisticated designs at Saud Emporium." />
+        </Helmet>
         <section className="category-hero">
           <div className="category-hero-banner">
             <img src="https://cdn.shopify.com/s/files/1/0027/2596/9964/files/US_web_banner.avif?v=1783939563" alt="Maxi" />
@@ -65,6 +70,10 @@ const Maxi = () => {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Maxi Dresses & Long Frocks | Saud Emporium</title>
+        <meta name="description" content="Shop graceful maxi dresses and long frocks featuring luxurious fabrics and sophisticated designs at Saud Emporium." />
+      </Helmet>
       <section className="category-hero">
         <div className="category-hero-banner">
           <img src="https://cdn.shopify.com/s/files/1/0027/2596/9964/files/US_web_banner.avif?v=1783939563" alt="Maxi" />
@@ -110,7 +119,7 @@ const Maxi = () => {
                 <div className="product-details">
                   <h3 className="product-title">{product.name}</h3>
                   <div className="price-container">
-                    <span className="discounted-price">{money(product.price)}</span>
+                    <span className="discounted-price">{money(getProductDisplayPrice(product))}</span>
                   </div>
                 </div>
               </div>

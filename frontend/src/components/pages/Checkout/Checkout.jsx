@@ -70,7 +70,8 @@ const Checkout = () => {
           product_image: item.product_image,
           quantity: item.quantity,
           size: item.size,
-          color: item.color
+          color: item.color,
+          variant: item.variant || item.selected_variant || ''
         })),
         full_name,
         email,
@@ -144,18 +145,12 @@ const Checkout = () => {
               onChange={handleChange}
             ></textarea>
 
-            <div className="payment-section">
-              <div className="payment-header">
-                <img
-                  src="https://crystalpng.com/wp-content/uploads/2024/10/Easypaisa-logo.png"
-                  alt="Easypaisa"
-                  className="easypaisa-logo"
-                />
-                <h3>Pay with Easypaisa</h3>
+            <div className="payment-section" style={{ background: '#f8fafc', border: '1px solid #c7d2fe', borderRadius: '16px', padding: '18px', marginBottom: '20px' }}>
+              <div className="payment-header" style={{ marginBottom: '12px' }}>
+                <h3 style={{ margin: 0, color: '#312e81' }}>Payment Instructions</h3>
               </div>
-              <p className="payment-note">
-                You will be redirected to the Easypaisa page where you can confirm your number
-                and complete the payment securely.
+              <p className="payment-note" style={{ margin: 0, color: '#3730a3', lineHeight: '1.7' }}>
+                You will be directed to the payment instructions page. Please fill this carefully to ensure smooth delivery.
               </p>
             </div>
 
@@ -172,7 +167,11 @@ const Checkout = () => {
               <div key={item.id} className="summary-item">
                 <img src={item.product_image} alt={item.product_name} />
                 <div className="summary-item-info">
-                  <p>{item.product_name}{item.size ? ' — ' + item.size : ''}</p>
+                  <p>
+                    {item.product_name}
+                    {(item.variant || item.selected_variant) ? ` — ${item.variant || item.selected_variant}` : ''}
+                    {item.size ? ` — ${item.size}` : ''}
+                  </p>
                   <span>{item.quantity} × {money(item.product_price)}</span>
                 </div>
                 <div className="summary-item-price">{money(item.product_price * item.quantity)}</div>
