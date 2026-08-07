@@ -387,11 +387,11 @@ const getVariantData = () => {
             </div>
 
             {/* ✅ DESCRIPTION */}
-            {product.description && (
-              <div className="product-description" id="productPageDescription">
-                {product.description}
-              </div>
-            )}
+{variantData.description && (
+  <div className="product-description" id="productPageDescription">
+    {variantData.description}
+  </div>
+)}
 
             {/* ✅ ACTIONS */}
             <div className="product-actions">
