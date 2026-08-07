@@ -94,45 +94,18 @@ exports.getByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    // FIX: unified schema — the 'products' table (not the old
-    // 'category_products' table) is where the admin panel now inserts
-    // all products, with a 'category' column. Using ilike for
-    // case-insensitive matching since frontend sends lowercase
-    // ("saree") while the DB stores "Saree".
-    // Query both 'products' (primary) and 'category_products' (legacy)
-    // then merge them so storefront shows admin-created rows regardless
-    // of which table they were stored in.
-    const [primary, legacy] = await Promise.all([
-      supabase
-        .from('products')
-        .select('*')
-        .ilike('category', category)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('category_products')
-        .select('*')
-        .ilike('category', category)
-        .order('created_at', { ascending: false })
-    ]);
+    // Category listing pages read ONLY from 'category_products'.
+    // The 'products' table is exclusively for homepage Bestseller /
+    // New Arrival teasers and must never feed this page.
+    const { data, error } = await supabase
+      .from('category_products')
+      .select('*')
+      .ilike('category', category)
+      .order('created_at', { ascending: false });
 
-    if (primary.error && legacy.error) throw primary.error || legacy.error;
+    if (error) throw error;
 
-    const primaryData = primary.data || [];
-    const legacyData = legacy.data || [];
-
-    // Merge by id, prefer primary table entries when ids collide
-    const mergedById = new Map();
-    primaryData.forEach(p => mergedById.set(String(p.id), p));
-    legacyData.forEach(p => {
-      const key = String(p.id);
-      if (!mergedById.has(key)) mergedById.set(key, p);
-    });
-
-    const merged = Array.from(mergedById.values()).sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    res.json(merged.map(normalizeProductPayload));
+    res.json((data || []).map(normalizeProductPayload));
   } catch (err) {
     console.error('Error fetching category:', err);
     res.status(500).json({ error: 'Failed to fetch category products' });
