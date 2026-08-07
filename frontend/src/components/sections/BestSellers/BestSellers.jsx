@@ -104,7 +104,7 @@ const BestSellers = () => {
                 <small>{product.small_label || ''}</small>
                 <h3>{product.heading || product.name}</h3>
                 <div className="best-bottom">
-                  <h4>{money(getProductDisplayPrice(product))}</h4>
+            
                   <button className="view-btn">View</button>
                 </div>
               </div>
