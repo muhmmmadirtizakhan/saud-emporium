@@ -41,31 +41,33 @@ const ProductDetail = () => {
     if (variantType === 'stitched') return ['stitched'];
     return ['unstitched'];
   };
+const getVariantData = () => {
+  if (!product) return { price: 0, features: [], size: null, description: '' };
 
-  // ✅ Get display data based on active variant
-  const getVariantData = () => {
-    if (!product) return { price: 0, features: [], size: null };
+  const jewelrySize = product.size || (Array.isArray(product.sizes) ? product.sizes.join(', ') : null);
+  const sizeForJewelry = isJewelry() ? jewelrySize : null;
 
-    const jewelrySize = product.size || (Array.isArray(product.sizes) ? product.sizes.join(', ') : null);
-    const sizeForJewelry = isJewelry() ? jewelrySize : null;
-
-    if (activeVariant === 'unstitched') {
-      return {
-        price: Number(product.unstitched_price ?? product.price ?? 0),
-        features: Array.isArray(product.unstitched_features) ? product.unstitched_features : (Array.isArray(product.features) ? product.features : []),
-        size: sizeForJewelry,
-        label: 'Unstitched'
-      };
-    }
-
+  if (activeVariant === 'unstitched') {
     return {
-      price: Number(product.stitched_price ?? product.price ?? 0),
-      features: Array.isArray(product.stitched_features) ? product.stitched_features : (Array.isArray(product.features) ? product.features : []),
-      size: isJewelry() ? jewelrySize : product.size,
-      label: 'Stitched'
+      price: Number(product.unstitched_price ?? product.price ?? 0),
+      features: Array.isArray(product.unstitched_features) && product.unstitched_features.length > 0
+        ? product.unstitched_features
+        : (Array.isArray(product.features) ? product.features : []),
+      description: product.description ?? '', // no separate unstitched_description column exists
+      size: sizeForJewelry,
+      label: 'Unstitched'
     };
-  };
+  }
 
+  // stitched -> base columns
+  return {
+    price: Number(product.price ?? product.unstitched_price ?? 0),
+    features: Array.isArray(product.features) ? product.features : [],
+    description: product.description ?? '',
+    size: isJewelry() ? jewelrySize : product.size,
+    label: 'Stitched'
+  };
+};
   // ✅ Get size display (comma separated for jewelry)
   const getSizeDisplay = () => {
     const variantData = getVariantData();
