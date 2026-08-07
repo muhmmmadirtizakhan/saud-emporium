@@ -107,7 +107,7 @@ const NewArrivals = () => {
                 <small>{product.category || ''}</small>
                 <h3>{product.name || product.heading}</h3>
                 <div className="best-bottom">
-                  <h4>{money(getProductDisplayPrice(product))}</h4>
+              
                   <button className="view-btn">View</button>
                 </div>
               </div>
