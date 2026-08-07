@@ -15,28 +15,29 @@ const normalizeProductPayload = (product) => {
     normalized.sizes = normalized.unstitched_sizes || [];
   } else if (normalized.variant === 'stitched') {
     normalized.price = normalized.price ?? normalized.unstitched_price ?? 0;
-    normalized.description = normalized.stitched_description ?? normalized.description ?? '';
-    normalized.features = normalized.stitched_features || normalized.features || [];
-    normalized.sizes = normalized.stitched_sizes || normalized.sizes || [];
+    normalized.description = normalized.description ?? '';
+    normalized.features = normalized.features || [];
+    normalized.sizes = normalized.sizes || [];
   } else if (normalized.variant === 'both') {
+    // FIX: base price/features/description columns ARE the stitched variant's
+    // data — don't clobber them with unstitched_* fallbacks like before.
+    // That old code was overwriting correct stitched data with unstitched data.
     normalized.price = normalized.price ?? normalized.unstitched_price ?? 0;
-    normalized.description = normalized.stitched_description ?? normalized.unstitched_description ?? normalized.description ?? '';
-    normalized.features = normalized.stitched_features || normalized.unstitched_features || normalized.features || [];
-    normalized.sizes = normalized.stitched_sizes || normalized.unstitched_sizes || normalized.sizes || [];
+    normalized.description = normalized.description ?? '';
+    normalized.features = normalized.features || [];
+    normalized.sizes = normalized.sizes || normalized.unstitched_sizes || [];
   }
 
   if (!Array.isArray(normalized.features)) normalized.features = [];
+  if (!Array.isArray(normalized.unstitched_features)) normalized.unstitched_features = [];
   if (!Array.isArray(normalized.sizes)) normalized.sizes = [];
 
-  // Support legacy frontend fields: jewelry may store array sizes in `sizes`,
-  // but the product detail page expects `size` as a comma-separated string.
   if (!normalized.size && normalized.sizes.length > 0) {
     normalized.size = normalized.sizes.join(', ');
   }
 
   return normalized;
 };
-
 // ============================================================
 // GET /api/products/bestsellers
 // (homepage teaser only — pulled from 'products' table)
