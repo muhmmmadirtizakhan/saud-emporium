@@ -19,6 +19,10 @@ const ProductDetail = () => {
   // ✅ VARIANT SWITCH STATE
   const [activeVariant, setActiveVariant] = useState('unstitched');
   
+  // ✅ COLOR VARIANT STATE
+  const [colorVariants, setColorVariants] = useState([]);
+  const [selectedColorVariant, setSelectedColorVariant] = useState(null);
+  
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -41,34 +45,52 @@ const ProductDetail = () => {
     if (variantType === 'stitched') return ['stitched'];
     return ['unstitched'];
   };
-const getVariantData = () => {
-  if (!product) return { price: 0, features: [], size: null, description: '' };
 
-  const jewelrySize = product.size || (Array.isArray(product.sizes) ? product.sizes.join(', ') : null);
-  const sizeForJewelry = isJewelry() ? jewelrySize : null;
-
-  if (activeVariant === 'unstitched') {
-    return {
-      price: Number(product.unstitched_price ?? product.price ?? 0),
-      features: Array.isArray(product.unstitched_features) && product.unstitched_features.length > 0
-        ? product.unstitched_features
-        : (Array.isArray(product.features) ? product.features : []),
-      description: product.description ?? '', // no separate unstitched_description column exists
-      size: sizeForJewelry,
-      label: 'Unstitched'
-    };
-  }
-
-  // stitched -> base columns
-  return {
-    price: Number(product.price ?? product.unstitched_price ?? 0),
-    features: Array.isArray(product.features) ? product.features : [],
-    description: product.description ?? '',
-    size: isJewelry() ? jewelrySize : product.size,
-    label: 'Stitched'
+  // ✅ HELPER: Normalize array from JSON string or array
+  const normalizeArray = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   };
-};
-  // ✅ Get size display (comma separated for jewelry)
+
+  // ✅ SIMPLE getVariantData — BAS YAHI CHANGE HAI
+  const getVariantData = () => {
+    if (!product) return { price: 0, features: [], size: null, description: '' };
+
+    const jewelrySize = product.size || (Array.isArray(product.sizes) ? product.sizes.join(', ') : null);
+    const sizeForJewelry = isJewelry() ? jewelrySize : null;
+
+    // ✅ Normalize both features arrays
+    const unstitchedFeatures = normalizeArray(product.unstitched_features);
+    const stitchedFeatures = normalizeArray(product.features);
+
+    if (activeVariant === 'unstitched') {
+      return {
+        price: Number(product.unstitched_price ?? product.price ?? 0),
+        features: unstitchedFeatures.length > 0 ? unstitchedFeatures : stitchedFeatures,
+        description: product.description || '',
+        size: sizeForJewelry,
+        label: 'Unstitched'
+      };
+    }
+
+    return {
+      price: Number(product.price ?? product.unstitched_price ?? 0),
+      features: stitchedFeatures,
+      description: product.description || '',
+      size: isJewelry() ? jewelrySize : product.size,
+      label: 'Stitched'
+    };
+  };
+
   const getSizeDisplay = () => {
     const variantData = getVariantData();
     if (!variantData.size) return null;
@@ -78,7 +100,6 @@ const getVariantData = () => {
     return [variantData.size];
   };
 
-  // ✅ Check if size should be shown
   const shouldShowSize = () => {
     if (!product) return false;
     if (isJewelry()) return true;
@@ -103,20 +124,42 @@ const getVariantData = () => {
     return [];
   };
 
+  const normalizeColorVariants = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   const fetchProduct = async () => {
     setLoading(true);
     try {
       const response = await api.get(`/products/${id}`);
       const productData = response.data;
       setProduct(productData);
-      const images = normalizeImages(productData.images) || (productData.front_image ? [productData.front_image] : []);
-      setMainImage(images[0] || '');
       
-      // ✅ Set default variant from DB
+      const images = normalizeImages(productData.images) || (productData.front_image ? [productData.front_image] : []);
+      
+      const variants = normalizeColorVariants(productData.color_variants);
+      setColorVariants(variants);
+      
+      if (variants.length > 0) {
+        setSelectedColorVariant(variants[0]);
+        setMainImage(variants[0].image || images[0] || '');
+      } else {
+        setMainImage(images[0] || '');
+      }
+      
       const variantType = getProductVariantType(response.data);
       setActiveVariant(variantType === 'stitched' ? 'stitched' : 'unstitched');
       
-      // ✅ Auto select size
       const sizeField = response.data.size || (Array.isArray(response.data.sizes) ? response.data.sizes.join(', ') : '');
       if (sizeField) {
         if (isJewelry()) {
@@ -130,6 +173,18 @@ const getVariantData = () => {
       console.error('Error fetching product:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleColorClick = (variant) => {
+    setSelectedColorVariant(variant);
+    setMainImage(variant.image || '');
+  };
+
+  const handleThumbnailClick = (image, variant) => {
+    setMainImage(image);
+    if (variant) {
+      setSelectedColorVariant(variant);
     }
   };
 
@@ -160,7 +215,10 @@ const getVariantData = () => {
     const cartProduct = {
       ...product,
       price: variantData.price,
-      selectedVariant: activeVariant
+      selectedVariant: activeVariant,
+      selectedColorVariantId: selectedColorVariant?.id || null,
+      selectedColorHex: selectedColorVariant?.hex || product.color_hex || null,
+      image: selectedColorVariant?.image || mainImage || product.image
     };
     addToCart(cartProduct, quantity, selectedSize, selectedColor, activeVariant);
   };
@@ -211,10 +269,10 @@ const getVariantData = () => {
   const variantData = getVariantData();
   const displayPrice = variantData.price;
   const displayFeatures = variantData.features;
+  const displayDescription = variantData.description;
   const showSize = shouldShowSize();
   const sizeList = getSizeDisplay();
   const isJewelryCategory = isJewelry();
-  const variant = getVariant();
   const availableVariants = getAvailableVariants();
 
   return (
@@ -233,17 +291,109 @@ const getVariantData = () => {
             <div className="product-main-image">
               <img id="mainProductImage" src={mainImage} alt={product.heading || product.name} />
             </div>
-            {images.length > 1 && (
-              <div className="product-thumbnails" id="productThumbnails">
-                {images.map((img, i) => (
-                  <div 
-                    key={i} 
-                    className={`product-thumb ${i === 0 ? 'active' : ''}`}
-                    onClick={() => setMainImage(img)}
-                  >
-                    <img src={img} alt={`Thumbnail ${i + 1}`} />
-                  </div>
-                ))}
+            
+            {/* ✅ THUMBNAIL GRID WITH ARROW */}
+            {colorVariants.length > 0 && selectedColorVariant && (
+              <div className="product-thumbnails-wrapper" style={{ position: 'relative', marginTop: '20px' }}>
+                <div className="product-thumbnails" id="productThumbnails" style={{
+                  display: 'flex',
+                  gap: '12px',
+                  overflowX: 'auto',
+                  padding: '10px 5px',
+                  scrollBehavior: 'smooth',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}>
+                  {colorVariants.map((cv, index) => (
+                    <div 
+                      key={cv.id || index}
+                      className={`product-thumb ${selectedColorVariant?.id === cv.id ? 'active' : ''}`}
+                      onClick={() => handleThumbnailClick(cv.image, cv)}
+                      style={{
+                        minWidth: '80px',
+                        height: '80px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        border: selectedColorVariant?.id === cv.id ? '3px solid #3b82f6' : '2px solid #e5e7eb',
+                        flexShrink: 0,
+                        background: '#f3f4f6'
+                      }}
+                    >
+                      <img 
+                        src={cv.image} 
+                        alt={`Variant ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/80x80?text=No+Img';
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                <button 
+                  className="thumb-scroll-btn left"
+                  onClick={() => {
+                    const container = document.getElementById('productThumbnails');
+                    container.scrollLeft -= 200;
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: '-15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.6)',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 5,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ‹
+                </button>
+                
+                <button 
+                  className="thumb-scroll-btn right"
+                  onClick={() => {
+                    const container = document.getElementById('productThumbnails');
+                    container.scrollLeft += 200;
+                  }}
+                  style={{
+                    position: 'absolute',
+                    right: '-15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.6)',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 5,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ›
+                </button>
               </div>
             )}
           </div>
@@ -253,7 +403,7 @@ const getVariantData = () => {
               {product.heading || product.name}
             </h1>
 
-            {/* ✅ VARIANT SWITCH BUTTONS - SIRF CLOTHING KE LIYE */}
+            {/* ✅ VARIANT SWITCH BUTTONS */}
             {!isJewelryCategory && availableVariants.length > 0 && (
               <div className="variant-switch-container" style={{ marginBottom: '16px' }}>
                 <label style={{ 
@@ -294,7 +444,7 @@ const getVariantData = () => {
               </div>
             )}
 
-            {/* ✅ FEATURES - DB se based on active variant */}
+            {/* ✅ FEATURES - Changes with variant */}
             {displayFeatures && displayFeatures.length > 0 && (
               <ul className="product-highlights" id="productHighlights">
                 {displayFeatures.map((feature, i) => (
@@ -303,7 +453,6 @@ const getVariantData = () => {
               </ul>
             )}
 
-            {/* ✅ PRICE - DB se based on active variant */}
             <div className="product-price-area">
               <div className="product-price" id="productPagePrice">{money(displayPrice)}</div>
             </div>
@@ -312,22 +461,48 @@ const getVariantData = () => {
               {product.stock_status !== 'out_of_stock' ? '● In Stock' : '● Out of Stock'}
             </div>
 
-            {/* ✅ COLORS - DB se */}
-            {product.color && (
+            {/* ✅ AVAILABLE COLORS - SIRF CIRCLES */}
+            {colorVariants.length > 0 ? (
               <div className="product-option-group" id="productColorGroup">
-                <h4>Available Colors</h4>
-                <div className="product-colors" id="productColors">
-                  <div 
-                    className={`product-color ${selectedColor === product.color ? 'active' : ''}`} 
-                    style={{ background: product.color_hex || '#ccc' }}
-                    onClick={() => setSelectedColor(product.color)}
-                    title={product.color}
-                  ></div>
+                <h4>Available Colors ({colorVariants.length})</h4>
+                <div className="product-colors" id="productColors" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  {colorVariants.map((cv) => (
+                    <div 
+                      key={cv.id}
+                      className={`product-color ${selectedColorVariant?.id === cv.id ? 'active' : ''}`}
+                      style={{ 
+                        background: cv.hex,
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        border: selectedColorVariant?.id === cv.id ? '3px solid #3b82f6' : '2px solid #e5e7eb',
+                        transition: 'all 0.2s ease',
+                        boxShadow: selectedColorVariant?.id === cv.id ? '0 0 0 3px rgba(59,130,246,0.3)' : 'none'
+                      }}
+                      onClick={() => handleColorClick(cv)}
+                      title={cv.hex}
+                    />
+                  ))}
                 </div>
               </div>
+            ) : (
+              product.color && (
+                <div className="product-option-group" id="productColorGroup">
+                  <h4>Available Colors</h4>
+                  <div className="product-colors" id="productColors">
+                    <div 
+                      className={`product-color ${selectedColor === product.color ? 'active' : ''}`} 
+                      style={{ background: product.color_hex || '#ccc' }}
+                      onClick={() => setSelectedColor(product.color)}
+                      title={product.color}
+                    />
+                  </div>
+                </div>
+              )
             )}
 
-            {/* ✅ SIZE - Based on variant */}
+            {/* ✅ SIZE */}
             {showSize && sizeList && sizeList.length > 0 ? (
               <div className="product-option-group" id="productSizeGroup">
                 <h4>Available Sizes</h4>
@@ -359,7 +534,6 @@ const getVariantData = () => {
                 )}
               </div>
             ) : (
-              // ✅ NO SIZE FOR UNSTITCHED
               !isJewelryCategory && activeVariant === 'unstitched' && (
                 <div className="product-option-group">
                   <h4>Size</h4>
@@ -376,7 +550,6 @@ const getVariantData = () => {
               )
             )}
 
-            {/* ✅ QUANTITY */}
             <div className="product-option-group">
               <h4>Quantity</h4>
               <div className="product-quantity">
@@ -387,13 +560,12 @@ const getVariantData = () => {
             </div>
 
             {/* ✅ DESCRIPTION */}
-{variantData.description && (
-  <div className="product-description" id="productPageDescription">
-    {variantData.description}
-  </div>
-)}
+            {displayDescription && (
+              <div className="product-description" id="productPageDescription">
+                {displayDescription}
+              </div>
+            )}
 
-            {/* ✅ ACTIONS */}
             <div className="product-actions">
               <button className="add-cart-btn" onClick={handleAddToCart}>Add To Cart</button>
               <button className="buy-now-btn" onClick={handleBuyNow}>Buy Now</button>
