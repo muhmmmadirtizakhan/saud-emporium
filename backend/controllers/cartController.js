@@ -20,7 +20,7 @@ exports.getCart = async (req, res) => {
 };
 
 // ============================================================
-// POST /api/cart
+// POST /api/cart — ✅ FIXED
 // ============================================================
 exports.addToCart = async (req, res) => {
   try {
@@ -31,13 +31,19 @@ exports.addToCart = async (req, res) => {
       product_image,
       quantity,
       size,
-      color
+      color,
+      variant,
+      color_variant_id,   // ✅ ADDED
+      color_hex           // ✅ ADDED
     } = req.body;
+
+    console.log('📥 Cart Request:', { product_id, product_name, quantity, size, color, variant, color_variant_id, color_hex });
 
     if (!product_id || !product_name || !product_price) {
       return res.status(400).json({ error: 'Product id, name and price are required' });
     }
 
+    // Check if same product + same size + same color + same variant exists
     const { data: existing } = await supabase
       .from('user_cart')
       .select('*')
@@ -45,7 +51,8 @@ exports.addToCart = async (req, res) => {
       .eq('product_id', product_id)
       .eq('size', size || '')
       .eq('color', color || '')
-      .single();
+      .eq('variant', variant || '')
+      .maybeSingle();
 
     if (existing) {
       const { data, error } = await supabase
@@ -62,6 +69,7 @@ exports.addToCart = async (req, res) => {
       return res.json({ success: true, message: 'Cart updated', product: data });
     }
 
+    // ✅ INSERT with new fields
     const { data, error } = await supabase
       .from('user_cart')
       .insert({
@@ -72,7 +80,10 @@ exports.addToCart = async (req, res) => {
         product_image: product_image || '',
         quantity: quantity || 1,
         size: size || '',
-        color: color || ''
+        color: color || '',
+        variant: variant || '',
+        color_variant_id: color_variant_id || null,   // ✅ ADDED
+        color_hex: color_hex || null                  // ✅ ADDED
       })
       .select()
       .single();
