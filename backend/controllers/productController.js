@@ -8,28 +8,46 @@ const normalizeProductPayload = (product) => {
 
   normalized.variant = ['stitched', 'unstitched', 'both'].includes(variantType) ? variantType : 'unstitched';
 
+  // ✅ FIX: Keep features separate — don't override
+  let unstitchedFeatures = normalized.unstitched_features || [];
+  let stitchedFeatures = normalized.stitched_features || normalized.features || [];
+  let baseFeatures = normalized.features || [];
+
+  // Ensure arrays
+  if (typeof unstitchedFeatures === 'string') {
+    try { unstitchedFeatures = JSON.parse(unstitchedFeatures); } catch { unstitchedFeatures = []; }
+  }
+  if (typeof stitchedFeatures === 'string') {
+    try { stitchedFeatures = JSON.parse(stitchedFeatures); } catch { stitchedFeatures = []; }
+  }
+  if (typeof baseFeatures === 'string') {
+    try { baseFeatures = JSON.parse(baseFeatures); } catch { baseFeatures = []; }
+  }
+
+  if (!Array.isArray(unstitchedFeatures)) unstitchedFeatures = [];
+  if (!Array.isArray(stitchedFeatures)) stitchedFeatures = [];
+  if (!Array.isArray(baseFeatures)) baseFeatures = [];
+
+  // ✅ Keep ALL features separate
+  normalized.unstitched_features = unstitchedFeatures;
+  normalized.stitched_features = stitchedFeatures;
+  normalized.features = baseFeatures;
+
+  // Price logic
   if (normalized.variant === 'unstitched') {
     normalized.price = normalized.unstitched_price ?? normalized.price ?? 0;
     normalized.description = normalized.unstitched_description ?? normalized.description ?? '';
-    normalized.features = normalized.unstitched_features || normalized.features || [];
     normalized.sizes = normalized.unstitched_sizes || [];
   } else if (normalized.variant === 'stitched') {
     normalized.price = normalized.price ?? normalized.unstitched_price ?? 0;
-    normalized.description = normalized.description ?? '';
-    normalized.features = normalized.features || [];
-    normalized.sizes = normalized.sizes || [];
+    normalized.description = normalized.stitched_description ?? normalized.description ?? '';
+    normalized.sizes = normalized.stitched_sizes || normalized.sizes || [];
   } else if (normalized.variant === 'both') {
-    // FIX: base price/features/description columns ARE the stitched variant's
-    // data — don't clobber them with unstitched_* fallbacks like before.
-    // That old code was overwriting correct stitched data with unstitched data.
     normalized.price = normalized.price ?? normalized.unstitched_price ?? 0;
-    normalized.description = normalized.description ?? '';
-    normalized.features = normalized.features || [];
-    normalized.sizes = normalized.sizes || normalized.unstitched_sizes || [];
+    normalized.description = normalized.stitched_description ?? normalized.unstitched_description ?? normalized.description ?? '';
+    normalized.sizes = normalized.stitched_sizes || normalized.unstitched_sizes || normalized.sizes || [];
   }
 
-  if (!Array.isArray(normalized.features)) normalized.features = [];
-  if (!Array.isArray(normalized.unstitched_features)) normalized.unstitched_features = [];
   if (!Array.isArray(normalized.sizes)) normalized.sizes = [];
 
   if (!normalized.size && normalized.sizes.length > 0) {
@@ -38,9 +56,9 @@ const normalizeProductPayload = (product) => {
 
   return normalized;
 };
+
 // ============================================================
 // GET /api/products/bestsellers
-// (homepage teaser only — pulled from 'products' table)
 // ============================================================
 exports.getBestsellers = async (req, res) => {
   try {
@@ -61,7 +79,6 @@ exports.getBestsellers = async (req, res) => {
 
 // ============================================================
 // GET /api/products/new-arrivals
-// (homepage teaser only — pulled from 'products' table)
 // ============================================================
 exports.getNewArrivals = async (req, res) => {
   try {
@@ -82,30 +99,41 @@ exports.getNewArrivals = async (req, res) => {
 
 // ============================================================
 // GET /api/products/category/:category
-// FIX: reverted to querying ONLY 'category_products' — this is the
-// single source of truth for category browse pages (Sarees, Suits,
-// Maxi, Jewelry). The 'products' table is exclusively for the
-// Bestsellers / New Arrivals homepage teasers and must never feed
-// the category listing pages, per the intended design: New Arrivals
-// on the homepage is a pure navigation teaser — it only routes to the
-// category page on click, it does not duplicate its own data there.
 // ============================================================
 exports.getByCategory = async (req, res) => {
   try {
     const { category } = req.params;
 
-    // Category listing pages read ONLY from 'category_products'.
-    // The 'products' table is exclusively for homepage Bestseller /
-    // New Arrival teasers and must never feed this page.
-    const { data, error } = await supabase
-      .from('category_products')
-      .select('*')
-      .ilike('category', category)
-      .order('created_at', { ascending: false });
+    const [primary, legacy] = await Promise.all([
+      supabase
+        .from('products')
+        .select('*')
+        .ilike('category', category)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('category_products')
+        .select('*')
+        .ilike('category', category)
+        .order('created_at', { ascending: false })
+    ]);
 
-    if (error) throw error;
+    if (primary.error && legacy.error) throw primary.error || legacy.error;
 
-    res.json((data || []).map(normalizeProductPayload));
+    const primaryData = primary.data || [];
+    const legacyData = legacy.data || [];
+
+    const mergedById = new Map();
+    primaryData.forEach(p => mergedById.set(String(p.id), p));
+    legacyData.forEach(p => {
+      const key = String(p.id);
+      if (!mergedById.has(key)) mergedById.set(key, p);
+    });
+
+    const merged = Array.from(mergedById.values()).sort((a, b) => {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    res.json(merged.map(normalizeProductPayload));
   } catch (err) {
     console.error('Error fetching category:', err);
     res.status(500).json({ error: 'Failed to fetch category products' });
@@ -114,10 +142,6 @@ exports.getByCategory = async (req, res) => {
 
 // ============================================================
 // GET /api/products/:id
-// Product detail pages reached FROM a category listing should
-// resolve from 'category_products' — kept a fallback to 'products'
-// only in case a bestseller/new-arrival card's own detail view is
-// ever opened directly.
 // ============================================================
 exports.getProductById = async (req, res) => {
   try {
