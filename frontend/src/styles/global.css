@@ -7081,3 +7081,82 @@ body {
     justify-content: center;
   }
 }
+/* ========================= */
+/* Color Variants - Thumbnails */
+/* ========================= */
+
+.color-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.color-thumb-item {
+  cursor: pointer;
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: transparent;
+  transition: all 0.2s ease;
+  width: 70px;
+}
+
+.color-thumb-item:hover {
+  background: #f3f4f6;
+  transform: scale(1.05);
+}
+
+.color-thumb-item.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.color-thumb-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+  border: 1px solid #e5e7eb;
+}
+
+.color-thumb-item.active img {
+  border-color: #3b82f6;
+  border-width: 2px;
+}
+
+.color-thumb-item .color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 auto 4px;
+  border: 1px solid #d1d5db;
+}
+
+/* ========================= */
+/* Mobile Fix - Color Thumbnails */
+/* ========================= */
+
+@media (max-width: 600px) {
+  .color-thumbnails {
+    gap: 8px;
+  }
+  
+  .color-thumb-item {
+    width: 60px;
+    padding: 4px;
+  }
+  
+  .color-thumb-item img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .color-thumb-item .color-dot {
+    width: 16px;
+    height: 16px;
+  }
+}
