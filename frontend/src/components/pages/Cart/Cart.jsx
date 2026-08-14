@@ -35,23 +35,24 @@ const Cart = () => {
     }
     navigate('/checkout');
   };
-const loadOrders = async () => {
-  if (!isAuthenticated) {
-    alert('Please login first!');
-    return;
-  }
-  setOrdersLoading(true);
-  try {
-    const response = await api.get('/orders');
-    console.log('ORDERS API RESPONSE:', response.data);   // 👈 YE NAYI LINE ADD KARO
-    console.log('IS ARRAY?', Array.isArray(response.data));  // 👈 YE BHI ADD KARO
-    setOrders(response.data || []);
-  } catch (error) {
-    console.error('Error loading orders:', error);
-  } finally {
-    setOrdersLoading(false);
-  }
-};
+
+  const loadOrders = async () => {
+    if (!isAuthenticated) {
+      alert('Please login first!');
+      return;
+    }
+    setOrdersLoading(true);
+    try {
+      const response = await api.get('/orders');
+      console.log('ORDERS API RESPONSE:', response.data);
+      console.log('IS ARRAY?', Array.isArray(response.data));
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab);
@@ -144,10 +145,10 @@ const loadOrders = async () => {
                           ✕
                         </button>
                         <div className="cart-item-content">
+                          {/* ✅ Size sirf Stitched ke liye */}
                           <h3>
                             {item.product_name}
-                            {(item.variant || item.selected_variant) ? ` — ${item.variant || item.selected_variant}` : ''}
-                            {item.size ? ` — ${item.size}` : ''}
+                            {item.variant === 'stitched' && item.size ? ` — ${item.size}` : ''}
                           </h3>
                           <span className="cart-item-unit">{money(item.product_price)} each</span>
                           <div className="cart-item-qty">
@@ -173,16 +174,17 @@ const loadOrders = async () => {
               )}
             </div>
           )}
-{activeTab === 'ordersTab' && (
-  <div className="cart-tab-content active" id="ordersTab">
-    <div id="ordersContainer">
-      {ordersLoading ? (
-        <p>Loading orders...</p>
-      ) : orders.length === 0 ? (
-        <div className="cart-empty">No orders yet 📦</div>
-      ) : (
-        <table className="orders-table">
-          <thead>
+
+          {activeTab === 'ordersTab' && (
+            <div className="cart-tab-content active" id="ordersTab">
+              <div id="ordersContainer">
+                {ordersLoading ? (
+                  <p>Loading orders...</p>
+                ) : orders.length === 0 ? (
+                  <div className="cart-empty">No orders yet 📦</div>
+                ) : (
+                  <table className="orders-table">
+                    <thead>
                       <tr>
                         <th>Order ID</th>
                         <th>Date</th>
