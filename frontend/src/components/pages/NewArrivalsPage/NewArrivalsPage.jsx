@@ -55,9 +55,30 @@ const NewArrivalsPage = () => {
     }
   };
 
-  // FIX: card click now navigates to that specific product's detail page.
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
+  };
+
+  const parseImages = (images) => {
+    if (Array.isArray(images)) return images;
+    if (!images) return [];
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        return [images];
+      }
+    }
+    return [];
+  };
+
+  // ✅ FIX: model_image first priority
+  const getProductImage = (product) => {
+    if (product.model_image) return product.model_image;  // ✅ PRIORITY 1
+    if (product.image) return product.image;              // ✅ PRIORITY 2
+    const images = parseImages(product.images);
+    return images[0] || 'https://via.placeholder.com/300x400?text=No+Image';
   };
 
   if (loading) {
@@ -135,10 +156,14 @@ const NewArrivalsPage = () => {
                 onClick={() => handleCardClick(product.id)}
               >
                 <div className="image-container">
+                  {/* ✅ model_image first priority */}
                   <img
-                    src={product.image || product.images?.[0] || ''}
+                    src={getProductImage(product)}
                     alt={product.name}
                     className="product-image"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
+                    }}
                   />
                   <div
                     className={`heart ${isInWishlist(product.id) ? 'active' : ''}`}
