@@ -59,9 +59,6 @@ const Checkout = () => {
     try {
       const totalAmount = getTotalPrice();
 
-      // FIX: using the shared axios `api` instance (baseURL = http://localhost:3000/api)
-      // instead of raw fetch('/api/orders'), which was resolving against the Vite dev
-      // server (localhost:5173) and returning a 404 with an empty body.
       const response = await api.post('/orders', {
         items: items.map(item => ({
           product_id: item.product_id,
@@ -71,7 +68,9 @@ const Checkout = () => {
           quantity: item.quantity,
           size: item.size,
           color: item.color,
-          variant: item.variant || item.selected_variant || ''
+          variant: item.variant || item.selected_variant || '',
+          color_hex: item.color_hex || '',
+          color_variant_id: item.color_variant_id || ''
         })),
         full_name,
         email,
@@ -167,10 +166,10 @@ const Checkout = () => {
               <div key={item.id} className="summary-item">
                 <img src={item.product_image} alt={item.product_name} />
                 <div className="summary-item-info">
+                  {/* ✅ Size sirf Stitched ke liye */}
                   <p>
                     {item.product_name}
-                    {(item.variant || item.selected_variant) ? ` — ${item.variant || item.selected_variant}` : ''}
-                    {item.size ? ` — ${item.size}` : ''}
+                    {item.variant === 'stitched' && item.size ? ` — ${item.size}` : ''}
                   </p>
                   <span>{item.quantity} × {money(item.product_price)}</span>
                 </div>
