@@ -7160,3 +7160,17 @@ body {
     height: 16px;
   }
 }
+@media (max-width: 600px) {
+  .product-title {
+    font-size: 12px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.35 !important;
+    margin-bottom: 6px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .product-title {
+    font-size: 11px !important;
+  }
+}
