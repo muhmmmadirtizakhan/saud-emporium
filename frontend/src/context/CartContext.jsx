@@ -34,8 +34,11 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (product, quantity = 1, size = '', color = '', variant = '') => {
     try {
+      // ✅ Product name + Variant (Sirf variant, size nahi)
+      const baseName = product.heading || product.name;
       const variantLabel = getVariantDisplayName(variant);
-      const displayName = [product.heading || product.name, variantLabel].filter(Boolean).join(' — ');
+      const displayName = variantLabel ? `${baseName} — ${variantLabel}` : baseName;
+      
       const response = await api.post('/cart', {
         product_id: product.id,
         product_name: displayName,
@@ -44,8 +47,11 @@ export const CartProvider = ({ children }) => {
         quantity,
         size,
         color,
-        variant: variantLabel || variant,
+        variant: variant || '',
+        color_variant_id: product.selectedColorVariantId || null,
+        color_hex: product.selectedColorHex || null,
       });
+      
       await fetchCart();
       toast.success('Added to cart!');
       return response.data;
@@ -56,20 +62,16 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (cartId, quantity) => {
-    // Prevent concurrent update requests for the same cart item
     if (updatingRef.current.has(cartId)) return;
     updatingRef.current.add(cartId);
 
-    // Optimistic UI update
     setItems(prev => prev.map(item => item.id === cartId ? { ...item, quantity } : item));
 
     try {
       await api.put(`/cart/${cartId}`, { quantity });
-      // Refresh to ensure server-side consistency
       await fetchCart();
     } catch (error) {
       toast.error('Failed to update quantity');
-      // Re-fetch to restore consistent state
       await fetchCart();
     } finally {
       updatingRef.current.delete(cartId);
