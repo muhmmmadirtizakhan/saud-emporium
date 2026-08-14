@@ -37,12 +37,34 @@ const Suits = () => {
     }
   };
 
-  // FIX: card click now navigates to the product detail page.
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
   const filters = ['2 Piece', '3 Piece', 'Lawn', 'Khaddi', 'Chiffon', 'Silk', 'Party Wear'];
+
+  const parseImages = (images) => {
+    if (Array.isArray(images)) return images;
+    if (!images) return [];
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        return [images];
+      }
+    }
+    return [];
+  };
+
+  // ✅ FIX: model_image first priority
+  const getProductImage = (product) => {
+    if (product.model_image) return product.model_image;  // ✅ PRIORITY 1
+    if (product.image) return product.image;              // ✅ PRIORITY 2
+    const images = parseImages(product.images);
+    return images[0] || 'https://via.placeholder.com/300x400?text=No+Image';
+  };
+
   const filteredProducts = selectedFilter
     ? products.filter(p => p.sub_category?.toLowerCase() === selectedFilter.toLowerCase())
     : products;
@@ -133,7 +155,15 @@ const Suits = () => {
                   onClick={() => handleCardClick(product.id)}
                 >
                   <div className="image-container">
-                    <img src={product.image || product.images?.[0] || ''} alt={product.name} className="product-image" />
+                    {/* ✅ model_image first priority */}
+                    <img 
+                      src={getProductImage(product)} 
+                      alt={product.name} 
+                      className="product-image"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
+                      }}
+                    />
                     <div 
                       className={`heart ${isInWishlist(product.id) ? 'active' : ''}`}
                       onClick={(e) => handleWishlist(e, product)}
