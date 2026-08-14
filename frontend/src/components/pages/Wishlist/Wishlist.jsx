@@ -11,6 +11,14 @@ const Wishlist = () => {
     fetchWishlist();
   }, []);
 
+  // ✅ Get product image with priority: model_image > product_image
+  const getProductImage = (item) => {
+    if (item.model_image) return item.model_image;
+    if (item.product_image) return item.product_image;
+    if (item.image) return item.image;
+    return 'https://via.placeholder.com/300x400?text=No+Image';
+  };
+
   if (items.length === 0) {
     return (
       <div className="page">
@@ -72,13 +80,21 @@ const Wishlist = () => {
           {items.map(item => (
             <div key={item.id} className="product-card sale-card">
               <div className="image-container">
-                <img src={item.product_image} alt={item.product_name} className="product-image" />
-              <div 
-  className="heart active" 
-  onClick={() => removeFromWishlist(item.product_id)}
->
-  <i className="fas fa-times"></i>
-</div>
+                {/* ✅ model_image first priority */}
+                <img 
+                  src={getProductImage(item)} 
+                  alt={item.product_name} 
+                  className="product-image"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
+                  }}
+                />
+                <div 
+                  className="heart active" 
+                  onClick={() => removeFromWishlist(item.product_id)}
+                >
+                  <i className="fas fa-times"></i>
+                </div>
               </div>
               <div className="product-details">
                 <h3 className="product-title">{item.product_name}</h3>
