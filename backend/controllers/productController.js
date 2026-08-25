@@ -105,17 +105,21 @@ exports.getByCategory = async (req, res) => {
     const { category } = req.params;
 
     const [primary, legacy] = await Promise.all([
-      supabase
-        .from('products')
-        .select('*')
-        .ilike('category', category)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('category_products')
-        .select('*')
-        .ilike('category', category)
-        .order('created_at', { ascending: false })
-    ]);
+  supabase
+    .from('products')
+    .select('*')
+    .ilike('category', category)
+    // ✅ FIX: `products` is the Best Sellers / New Arrivals teaser table —
+    // exclude teaser-flagged rows so they don't leak into category listings.
+    .or('is_bestseller.is.null,is_bestseller.eq.false')
+    .or('is_new_arrival.is.null,is_new_arrival.eq.false')
+    .order('created_at', { ascending: false }),
+  supabase
+    .from('category_products')
+    .select('*')
+    .ilike('category', category)
+    .order('created_at', { ascending: false })
+]);
 
     if (primary.error && legacy.error) throw primary.error || legacy.error;
 
